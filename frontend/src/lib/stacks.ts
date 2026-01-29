@@ -35,3 +35,35 @@ export const BADGE_INFO = {
   5: { name: 'Love Machine', emoji: '❤️', description: '500 likes', requirement: 500 },
   6: { name: 'OG Presence', emoji: '🏆', description: '100 check-ins', requirement: 100 },
 };
+
+// Wallet connection
+export async function connectWallet() {
+  try {
+    const response = await connect();
+    return {
+      success: true,
+      addresses: response.addresses,
+      stxAddress: response.addresses.find(a => a.symbol === 'STX')?.address ||
+                  response.addresses[0]?.address
+    };
+  } catch (error) {
+    console.error('Wallet connection failed:', error);
+    return { success: false, error };
+  }
+}
+
+export function disconnectWallet() {
+  disconnect();
+}
+
+export function checkConnection() {
+  return isConnected();
+}
+
+export function getStoredAddress() {
+  const data = getLocalStorage();
+  if (data?.addresses?.stx?.[0]) {
+    return data.addresses.stx[0].address;
+  }
+  return null;
+}

@@ -67,3 +67,64 @@ export function getStoredAddress() {
   }
   return null;
 }
+
+// Contract interactions
+export async function checkIn() {
+  try {
+    const result = await request('stx_callContract', {
+      contract: `${CONTRACT_ADDRESS}.${TRACKER_CONTRACT}`,
+      functionName: 'check-in',
+      functionArgs: [],
+      network: NETWORK,
+    });
+    return { success: true, txId: result.txid };
+  } catch (error) {
+    console.error('Check-in failed:', error);
+    return { success: false, error };
+  }
+}
+
+export async function logLikes(count: number) {
+  try {
+    const result = await request('stx_callContract', {
+      contract: `${CONTRACT_ADDRESS}.${TRACKER_CONTRACT}`,
+      functionName: 'log-likes',
+      functionArgs: [Cl.uint(count)],
+      network: NETWORK,
+    });
+    return { success: true, txId: result.txid };
+  } catch (error) {
+    console.error('Log likes failed:', error);
+    return { success: false, error };
+  }
+}
+
+export async function logComments(count: number) {
+  try {
+    const result = await request('stx_callContract', {
+      contract: `${CONTRACT_ADDRESS}.${TRACKER_CONTRACT}`,
+      functionName: 'log-comments',
+      functionArgs: [Cl.uint(count)],
+      network: NETWORK,
+    });
+    return { success: true, txId: result.txid };
+  } catch (error) {
+    console.error('Log comments failed:', error);
+    return { success: false, error };
+  }
+}
+
+export async function claimBadge(badgeType: number) {
+  try {
+    const result = await request('stx_callContract', {
+      contract: `${CONTRACT_ADDRESS}.${TRACKER_CONTRACT}`,
+      functionName: 'claim-badge',
+      functionArgs: [Cl.uint(badgeType)],
+      network: NETWORK,
+    });
+    return { success: true, txId: result.txid };
+  } catch (error) {
+    console.error('Claim badge failed:', error);
+    return { success: false, error };
+  }
+}

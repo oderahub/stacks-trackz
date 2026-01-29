@@ -29,3 +29,32 @@
 
 ;; Approximate blocks per day (Stacks ~10 min blocks = ~144 blocks/day)
 (define-constant BLOCKS_PER_DAY u144)
+
+;; ============================================
+;; DATA STORAGE
+;; ============================================
+
+;; User stats map
+(define-map user-stats principal
+  {
+    last-check-in: uint,      ;; Block height of last check-in
+    current-streak: uint,     ;; Current consecutive days
+    longest-streak: uint,     ;; Best streak achieved
+    total-check-ins: uint,    ;; Total check-ins ever
+    total-likes: uint,        ;; Total likes logged
+    total-comments: uint      ;; Total comments logged
+  }
+)
+
+;; Track claimed badges per user
+(define-map user-badges
+  { user: principal, badge-type: uint }
+  bool
+)
+
+;; Global stats
+(define-data-var total-users uint u0)
+(define-data-var total-check-ins uint u0)
+
+;; Badge contract reference (set after deployment)
+(define-data-var badge-contract principal CONTRACT_OWNER)

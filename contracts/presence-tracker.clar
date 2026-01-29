@@ -58,3 +58,16 @@
 
 ;; Badge contract reference (set after deployment)
 (define-data-var badge-contract principal CONTRACT_OWNER)
+
+;; ============================================
+;; ADMIN FUNCTIONS
+;; ============================================
+
+;; Set the badge contract address (call after deploying both contracts)
+(define-public (set-badge-contract (contract-address principal))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT_OWNER) (err u100))
+    (var-set badge-contract contract-address)
+    (ok true)
+  )
+)

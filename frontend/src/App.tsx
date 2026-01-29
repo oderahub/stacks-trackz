@@ -193,22 +193,193 @@ function App() {
 
   return (
     <div className="app">
-      <h1>Proof of Presence</h1>
-      <p>{isConnected ? `Connected: ${shortenAddress(address || '')}` : 'Not connected'}</p>
-      <button onClick={isConnected ? handleDisconnect : handleConnect}>
-        {isConnected ? 'Disconnect' : 'Connect'}
-      </button>
-      {loading && <p>Loading...</p>}
-      {txStatus && <p>{txStatus}</p>}
-      <p>Streak: {userStats?.currentStreak || 0}</p>
-      <button onClick={handleCheckIn} disabled={!canUserCheckIn}>Check In</button>
-      <button onClick={handleLogLikes}>Log {likesCount} Like(s)</button>
-      <button onClick={handleLogComments}>Log {commentsCount} Comment(s)</button>
-      <button onClick={() => handleClaimBadge(1)}>Claim Badge</button>
-      <p>Eligibility: {JSON.stringify(eligibility)}</p>
-      <p>Badges: {JSON.stringify(badgeStatus)}</p>
-      <p>Badge Key Test: {getBadgeKey(1)}</p>
-      <p>Global: {JSON.stringify(globalStats)}</p>
+      <header className="header">
+        <div className="logo">
+          <span className="logo-emoji">🔥</span>
+          <h1>Proof of Presence</h1>
+        </div>
+        <div className="wallet-section">
+          {isConnected ? (
+            <div className="wallet-connected">
+              <span className="address">{shortenAddress(address || '')}</span>
+              <button onClick={handleDisconnect} className="btn btn-secondary">
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <button onClick={handleConnect} className="btn btn-primary" disabled={loading}>
+              {loading ? 'Connecting...' : 'Connect Wallet'}
+            </button>
+          )}
+        </div>
+      </header>
+
+      <main className="main">
+        {!isConnected ? (
+          <div className="welcome-section">
+            <div className="welcome-card">
+              <h2>Track Your Daily Presence</h2>
+              <p>
+                Build streaks, log your activity, and earn NFT badges for your consistency.
+                Connect your Stacks wallet to get started.
+              </p>
+              <div className="features">
+                <div className="feature">
+                  <span className="feature-icon">📅</span>
+                  <span>Daily Check-ins</span>
+                </div>
+                <div className="feature">
+                  <span className="feature-icon">🔥</span>
+                  <span>Build Streaks</span>
+                </div>
+                <div className="feature">
+                  <span className="feature-icon">🏆</span>
+                  <span>Earn NFT Badges</span>
+                </div>
+              </div>
+              {globalStats && (
+                <div className="global-stats-preview">
+                  <span>{globalStats.totalUsers} users</span>
+                  <span>•</span>
+                  <span>{globalStats.totalCheckIns} check-ins</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="dashboard">
+            {txStatus && (
+              <div className="tx-status">
+                <span className="status-dot"></span>
+                {txStatus}
+              </div>
+            )}
+
+            <div className="stats-grid">
+              <div className="stat-card streak-card">
+                <div className="stat-value">{userStats?.currentStreak || 0}</div>
+                <div className="stat-label">Current Streak</div>
+                <div className="stat-sublabel">🔥 days</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{userStats?.longestStreak || 0}</div>
+                <div className="stat-label">Longest Streak</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{userStats?.totalCheckIns || 0}</div>
+                <div className="stat-label">Total Check-ins</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{userStats?.totalLikes || 0}</div>
+                <div className="stat-label">Total Likes</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{userStats?.totalComments || 0}</div>
+                <div className="stat-label">Total Comments</div>
+              </div>
+            </div>
+
+            <div className="actions-section">
+              <div className="action-card check-in-card">
+                <h3>Daily Check-in</h3>
+                <p>Check in once per day to maintain your streak</p>
+                <button
+                  onClick={handleCheckIn}
+                  className="btn btn-primary btn-large"
+                  disabled={loading || !canUserCheckIn}
+                >
+                  {!canUserCheckIn ? '✓ Checked In Today' : '🔥 Check In Now'}
+                </button>
+              </div>
+
+              <div className="action-card">
+                <h3>Log Activity</h3>
+                <div className="activity-inputs">
+                  <div className="input-group">
+                    <label>Likes</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={likesCount}
+                      onChange={(e) => setLikesCount(parseInt(e.target.value) || 1)}
+                    />
+                    <button onClick={handleLogLikes} className="btn btn-secondary" disabled={loading}>
+                      Log Likes
+                    </button>
+                  </div>
+                  <div className="input-group">
+                    <label>Comments</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={commentsCount}
+                      onChange={(e) => setCommentsCount(parseInt(e.target.value) || 1)}
+                    />
+                    <button onClick={handleLogComments} className="btn btn-secondary" disabled={loading}>
+                      Log Comments
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="badges-section">
+              <h2>🏆 Achievement Badges</h2>
+              <div className="badges-grid">
+                {Object.entries(BADGE_INFO).map(([type, info]) => {
+                  const badgeType = parseInt(type);
+                  const hasBadge = badgeStatus?.[getBadgeKey(badgeType)] || false;
+                  const isEligible = eligibility[badgeType] || false;
+
+                  return (
+                    <div
+                      key={type}
+                      className={`badge-card ${hasBadge ? 'owned' : ''} ${isEligible && !hasBadge ? 'eligible' : ''}`}
+                    >
+                      <div className="badge-emoji">{info.emoji}</div>
+                      <div className="badge-name">{info.name}</div>
+                      <div className="badge-description">{info.description}</div>
+                      {hasBadge ? (
+                        <div className="badge-owned">✓ Owned</div>
+                      ) : isEligible ? (
+                        <button
+                          onClick={() => handleClaimBadge(badgeType)}
+                          className="btn btn-claim"
+                          disabled={loading}
+                        >
+                          Claim NFT
+                        </button>
+                      ) : (
+                        <div className="badge-locked">🔒 Locked</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {globalStats && (
+              <div className="global-stats">
+                <h3>Global Stats</h3>
+                <div className="global-stats-grid">
+                  <div className="global-stat">
+                    <span className="global-value">{globalStats.totalUsers}</span>
+                    <span className="global-label">Total Users</span>
+                  </div>
+                  <div className="global-stat">
+                    <span className="global-value">{globalStats.totalCheckIns}</span>
+                    <span className="global-label">Total Check-ins</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      <footer className="footer">
+        <p>Built on Stacks • Secured by Bitcoin</p>
+      </footer>
     </div>
   );
 }

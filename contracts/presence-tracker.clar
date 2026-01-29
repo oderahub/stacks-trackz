@@ -162,3 +162,55 @@
     )
   )
 )
+
+;; Log likes activity
+(define-public (log-likes (count uint))
+  (let
+    (
+      (caller tx-sender)
+      (existing-stats (map-get? user-stats caller))
+    )
+    (match existing-stats
+      stats
+        (begin
+          (map-set user-stats caller (merge stats {
+            total-likes: (+ (get total-likes stats) count)
+          }))
+          (print {
+            event: "likes-logged",
+            user: caller,
+            count: count,
+            new-total: (+ (get total-likes stats) count)
+          })
+          (ok (+ (get total-likes stats) count))
+        )
+      ERR_USER_NOT_FOUND
+    )
+  )
+)
+
+;; Log comments activity
+(define-public (log-comments (count uint))
+  (let
+    (
+      (caller tx-sender)
+      (existing-stats (map-get? user-stats caller))
+    )
+    (match existing-stats
+      stats
+        (begin
+          (map-set user-stats caller (merge stats {
+            total-comments: (+ (get total-comments stats) count)
+          }))
+          (print {
+            event: "comments-logged",
+            user: caller,
+            count: count,
+            new-total: (+ (get total-comments stats) count)
+          })
+          (ok (+ (get total-comments stats) count))
+        )
+      ERR_USER_NOT_FOUND
+    )
+  )
+)

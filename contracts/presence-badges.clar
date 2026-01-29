@@ -90,6 +90,45 @@
 )
 
 ;; ============================================
+;; MINTING FUNCTIONS
+;; ============================================
+
+;; Mint a new badge (only callable by authorized minter or owner)
+(define-public (mint (recipient principal) (badge-type uint))
+  (let
+    (
+      (token-id (+ (var-get last-token-id) u1))
+    )
+    ;; Check authorization
+    (asserts!
+      (or
+        (is-eq contract-caller (var-get authorized-minter))
+        (is-eq contract-caller CONTRACT_OWNER)
+      )
+      ERR_NOT_AUTHORIZED
+    )
+    ;; Validate badge type (1-6)
+    (asserts! (and (>= badge-type u1) (<= badge-type u6)) ERR_INVALID_BADGE_TYPE)
+    ;; Mint the NFT
+    (try! (nft-mint? presence-badge token-id recipient))
+    ;; Store badge metadata
+    (map-set token-badge-type token-id badge-type)
+    (map-set token-mint-time token-id block-height)
+    ;; Update last token ID
+    (var-set last-token-id token-id)
+    ;; Emit event
+    (print {
+      event: "badge-minted",
+      token-id: token-id,
+      badge-type: badge-type,
+      recipient: recipient,
+      block-height: block-height
+    })
+    (ok token-id)
+  )
+)
+
+;; ============================================
 ;; HELPER FUNCTIONS
 ;; ============================================
 

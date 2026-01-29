@@ -71,3 +71,94 @@
     (ok true)
   )
 )
+
+;; ============================================
+;; CORE FUNCTIONS
+;; ============================================
+
+;; Daily check-in function
+(define-public (check-in)
+  (let
+    (
+      (caller tx-sender)
+      (current-block block-height)
+      (existing-stats (map-get? user-stats caller))
+    )
+    (match existing-stats
+      ;; User exists - update streak
+      stats
+        (let
+          (
+            (last-check-in (get last-check-in stats))
+            (blocks-since-last (- current-block last-check-in))
+            (current-streak (get current-streak stats))
+          )
+          ;; Check if already checked in today (within same day window)
+          (asserts! (>= blocks-since-last BLOCKS_PER_DAY) ERR_ALREADY_CHECKED_IN)
+
+          ;; Calculate new streak
+          (let
+            (
+              (new-streak
+                (if (<= blocks-since-last (* BLOCKS_PER_DAY u2))
+                  ;; Checked in within ~48 hours - continue streak
+                  (+ current-streak u1)
+                  ;; Streak broken - reset
+                  u1
+                )
+              )
+              (new-longest (if (> new-streak (get longest-streak stats))
+                new-streak
+                (get longest-streak stats)
+              ))
+            )
+            ;; Update user stats
+            (map-set user-stats caller {
+              last-check-in: current-block,
+              current-streak: new-streak,
+              longest-streak: new-longest,
+              total-check-ins: (+ (get total-check-ins stats) u1),
+              total-likes: (get total-likes stats),
+              total-comments: (get total-comments stats)
+            })
+            ;; Update global stats
+            (var-set total-check-ins (+ (var-get total-check-ins) u1))
+            ;; Emit event
+            (print {
+              event: "check-in",
+              user: caller,
+              streak: new-streak,
+              total-check-ins: (+ (get total-check-ins stats) u1),
+              block-height: current-block
+            })
+            (ok {
+              streak: new-streak,
+              total-check-ins: (+ (get total-check-ins stats) u1)
+            })
+          )
+        )
+      ;; New user - initialize
+      (begin
+        (map-set user-stats caller {
+          last-check-in: current-block,
+          current-streak: u1,
+          longest-streak: u1,
+          total-check-ins: u1,
+          total-likes: u0,
+          total-comments: u0
+        })
+        ;; Update global stats
+        (var-set total-users (+ (var-get total-users) u1))
+        (var-set total-check-ins (+ (var-get total-check-ins) u1))
+        ;; Emit event
+        (print {
+          event: "new-user-check-in",
+          user: caller,
+          streak: u1,
+          block-height: current-block
+        })
+        (ok { streak: u1, total-check-ins: u1 })
+      )
+    )
+  )
+)

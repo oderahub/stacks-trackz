@@ -129,6 +129,69 @@
 )
 
 ;; ============================================
+;; READ-ONLY FUNCTIONS
+;; ============================================
+
+;; Get badge type for a token
+(define-read-only (get-badge-type (token-id uint))
+  (map-get? token-badge-type token-id)
+)
+
+;; Get mint time for a token
+(define-read-only (get-mint-time (token-id uint))
+  (map-get? token-mint-time token-id)
+)
+
+;; Get badge name by type
+(define-read-only (get-badge-name (badge-type uint))
+  (if (is-eq badge-type BADGE_WEEK_WARRIOR)
+    (ok "Week Warrior")
+    (if (is-eq badge-type BADGE_MONTHLY_MASTER)
+      (ok "Monthly Master")
+      (if (is-eq badge-type BADGE_CENTURY_CLUB)
+        (ok "Century Club")
+        (if (is-eq badge-type BADGE_CHATTERBOX)
+          (ok "Chatterbox")
+          (if (is-eq badge-type BADGE_LOVE_MACHINE)
+            (ok "Love Machine")
+            (if (is-eq badge-type BADGE_OG_PRESENCE)
+              (ok "OG Presence")
+              ERR_INVALID_BADGE_TYPE
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+;; Get authorized minter
+(define-read-only (get-authorized-minter)
+  (var-get authorized-minter)
+)
+
+;; ============================================
+;; ADMIN FUNCTIONS
+;; ============================================
+
+;; Update base URI (only owner)
+(define-public (set-base-uri (new-uri (string-ascii 256)))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_NOT_AUTHORIZED)
+    (var-set base-uri new-uri)
+    ;; Emit SIP-019 metadata update notification
+    (print {
+      notification: "token-metadata-update",
+      payload: {
+        contract-id: (as-contract tx-sender),
+        token-class: "nft"
+      }
+    })
+    (ok true)
+  )
+)
+
+;; ============================================
 ;; HELPER FUNCTIONS
 ;; ============================================
 

@@ -45,3 +45,58 @@
 
 ;; Authorized minter (presence-tracker contract)
 (define-data-var authorized-minter principal CONTRACT_OWNER)
+
+;; ============================================
+;; AUTHORIZATION
+;; ============================================
+
+;; Set the authorized minter (only presence-tracker contract should mint)
+(define-public (set-authorized-minter (new-minter principal))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_NOT_AUTHORIZED)
+    (var-set authorized-minter new-minter)
+    (ok true)
+  )
+)
+
+;; ============================================
+;; SIP-009 REQUIRED FUNCTIONS
+;; ============================================
+
+;; Get last token ID
+(define-read-only (get-last-token-id)
+  (ok (var-get last-token-id))
+)
+
+;; Get token URI - returns metadata URL for the badge
+(define-read-only (get-token-uri (token-id uint))
+  (let ((badge-type (default-to u0 (map-get? token-badge-type token-id))))
+    (ok (some (concat (var-get base-uri) (uint-to-ascii badge-type))))
+  )
+)
+
+;; Get owner of token
+(define-read-only (get-owner (token-id uint))
+  (ok (nft-get-owner? presence-badge token-id))
+)
+
+;; Transfer token
+(define-public (transfer (token-id uint) (sender principal) (recipient principal))
+  (begin
+    (asserts! (is-eq contract-caller sender) ERR_NOT_TOKEN_OWNER)
+    (asserts! (is-some (nft-get-owner? presence-badge token-id)) ERR_TOKEN_NOT_FOUND)
+    (nft-transfer? presence-badge token-id sender recipient)
+  )
+)
+
+;; ============================================
+;; HELPER FUNCTIONS
+;; ============================================
+
+;; Convert uint to ASCII string (for URI construction)
+(define-read-only (uint-to-ascii (value uint))
+  (if (<= value u9)
+    (unwrap-panic (element-at "0123456789" value))
+    "0"
+  )
+)

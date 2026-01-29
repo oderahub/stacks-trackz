@@ -1,0 +1,30 @@
+[project]
+name = "presence-protocol"
+description = "Daily habit tracker with NFT badges on Stacks"
+authors = []
+telemetry = false
+cache_dir = "./.cache"
+requirements = []
+
+[contracts.presence-badges]
+path = "contracts/presence-badges.clar"
+clarity_version = 3
+epoch = 3.0
+
+[contracts.presence-tracker]
+path = "contracts/presence-tracker.clar"
+clarity_version = 3
+epoch = 3.0
+depends_on = ["presence-badges"]
+
+[[project.requirements]]
+contract_id = "SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait"
+
+[repl.analysis]
+passes = ["check_checker"]
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false

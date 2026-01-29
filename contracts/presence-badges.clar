@@ -20,3 +20,28 @@
 (define-constant BADGE_CHATTERBOX u4)        ;; 100 comments
 (define-constant BADGE_LOVE_MACHINE u5)      ;; 500 likes
 (define-constant BADGE_OG_PRESENCE u6)       ;; 100 check-ins
+
+;; Base URI for metadata (can be updated by owner)
+(define-data-var base-uri (string-ascii 256) "https://presence-protocol.app/metadata/")
+
+;; ============================================
+;; NFT DEFINITION
+;; ============================================
+
+(define-non-fungible-token presence-badge uint)
+
+;; ============================================
+;; DATA STORAGE
+;; ============================================
+
+;; Track last token ID
+(define-data-var last-token-id uint u0)
+
+;; Map token ID to badge type
+(define-map token-badge-type uint uint)
+
+;; Map token ID to minted timestamp (block height)
+(define-map token-mint-time uint uint)
+
+;; Authorized minter (presence-tracker contract)
+(define-data-var authorized-minter principal CONTRACT_OWNER)

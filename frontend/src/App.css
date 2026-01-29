@@ -1,0 +1,58 @@
+/* ========================================
+   PRESENCE PROTOCOL - BRUTALIST RETRO-FUTURISM
+   ======================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@400;600;700;900&display=swap');
+
+:root {
+  /* Core palette - Electric orange meets deep space */
+  --color-bg: #0a0a0f;
+  --color-surface: #12121a;
+  --color-surface-elevated: #1a1a25;
+  --color-border: #2a2a3a;
+  --color-primary: #ff6b35;
+  --color-primary-glow: rgba(255, 107, 53, 0.4);
+  --color-secondary: #00d4ff;
+  --color-accent: #ffd93d;
+  --color-success: #4ade80;
+  --color-text: #e4e4e7;
+  --color-text-muted: #71717a;
+  --color-text-dim: #52525b;
+
+  /* Typography */
+  --font-display: 'Outfit', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* Effects */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --shadow-glow: 0 0 40px var(--color-primary-glow);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-display);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 107, 53, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+}

@@ -214,3 +214,66 @@
     )
   )
 )
+
+;; ============================================
+;; BADGE CLAIMING
+;; ============================================
+
+;; Claim a badge if eligible
+(define-public (claim-badge (badge-type uint))
+  (let
+    (
+      (caller tx-sender)
+      (stats (unwrap! (map-get? user-stats caller) ERR_USER_NOT_FOUND))
+    )
+    ;; Check if badge already claimed
+    (asserts!
+      (is-none (map-get? user-badges { user: caller, badge-type: badge-type }))
+      ERR_BADGE_ALREADY_CLAIMED
+    )
+    ;; Check eligibility based on badge type
+    (asserts! (check-badge-eligibility badge-type stats) ERR_NOT_ELIGIBLE)
+    ;; Mark badge as claimed
+    (map-set user-badges { user: caller, badge-type: badge-type } true)
+    ;; Mint the NFT badge via the badge contract
+    (try! (contract-call? .presence-badges mint caller badge-type))
+    ;; Emit event
+    (print {
+      event: "badge-claimed",
+      user: caller,
+      badge-type: badge-type,
+      block-height: block-height
+    })
+    (ok badge-type)
+  )
+)
+
+;; Check if user is eligible for a specific badge
+(define-private (check-badge-eligibility (badge-type uint) (stats {
+  last-check-in: uint,
+  current-streak: uint,
+  longest-streak: uint,
+  total-check-ins: uint,
+  total-likes: uint,
+  total-comments: uint
+}))
+  (if (is-eq badge-type BADGE_WEEK_WARRIOR)
+    (>= (get longest-streak stats) STREAK_WEEK)
+    (if (is-eq badge-type BADGE_MONTHLY_MASTER)
+      (>= (get longest-streak stats) STREAK_MONTH)
+      (if (is-eq badge-type BADGE_CENTURY_CLUB)
+        (>= (get longest-streak stats) STREAK_CENTURY)
+        (if (is-eq badge-type BADGE_CHATTERBOX)
+          (>= (get total-comments stats) COMMENTS_THRESHOLD)
+          (if (is-eq badge-type BADGE_LOVE_MACHINE)
+            (>= (get total-likes stats) LIKES_THRESHOLD)
+            (if (is-eq badge-type BADGE_OG_PRESENCE)
+              (>= (get total-check-ins stats) CHECKINS_THRESHOLD)
+              false
+            )
+          )
+        )
+      )
+    )
+  )
+)

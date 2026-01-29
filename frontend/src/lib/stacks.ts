@@ -128,3 +128,124 @@ export async function claimBadge(badgeType: number) {
     return { success: false, error };
   }
 }
+
+// Read-only functions
+export async function getUserStats(address: string) {
+  try {
+    const result = await fetchCallReadOnlyFunction({
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: TRACKER_CONTRACT,
+      functionName: 'get-user-stats',
+      functionArgs: [Cl.principal(address)],
+      network: NETWORK,
+      senderAddress: address,
+    });
+
+    const value = cvToValue(result);
+    if (value) {
+      return {
+        lastCheckIn: value['last-check-in'],
+        currentStreak: value['current-streak'],
+        longestStreak: value['longest-streak'],
+        totalCheckIns: value['total-check-ins'],
+        totalLikes: value['total-likes'],
+        totalComments: value['total-comments'],
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Get user stats failed:', error);
+    return null;
+  }
+}
+
+export async function canCheckIn(address: string) {
+  try {
+    const result = await fetchCallReadOnlyFunction({
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: TRACKER_CONTRACT,
+      functionName: 'can-check-in',
+      functionArgs: [Cl.principal(address)],
+      network: NETWORK,
+      senderAddress: address,
+    });
+
+    return cvToValue(result);
+  } catch (error) {
+    console.error('Can check-in failed:', error);
+    return true; // Default to true for new users
+  }
+}
+
+export async function getBadgeStatus(address: string) {
+  try {
+    const result = await fetchCallReadOnlyFunction({
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: TRACKER_CONTRACT,
+      functionName: 'get-badge-status',
+      functionArgs: [Cl.principal(address)],
+      network: NETWORK,
+      senderAddress: address,
+    });
+
+    return cvToValue(result);
+  } catch (error) {
+    console.error('Get badge status failed:', error);
+    return null;
+  }
+}
+
+export async function isEligibleForBadge(address: string, badgeType: number) {
+  try {
+    const result = await fetchCallReadOnlyFunction({
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: TRACKER_CONTRACT,
+      functionName: 'is-eligible-for-badge',
+      functionArgs: [Cl.principal(address), Cl.uint(badgeType)],
+      network: NETWORK,
+      senderAddress: address,
+    });
+
+    return cvToValue(result);
+  } catch (error) {
+    console.error('Is eligible for badge failed:', error);
+    return false;
+  }
+}
+
+export async function getGlobalStats() {
+  try {
+    const result = await fetchCallReadOnlyFunction({
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: TRACKER_CONTRACT,
+      functionName: 'get-global-stats',
+      functionArgs: [],
+      network: NETWORK,
+      senderAddress: CONTRACT_ADDRESS,
+    });
+
+    const value = cvToValue(result);
+    return {
+      totalUsers: value['total-users'],
+      totalCheckIns: value['total-check-ins'],
+    };
+  } catch (error) {
+    console.error('Get global stats failed:', error);
+    return null;
+  }
+}
+
+// Deploy contracts via wallet
+export async function deployContract(contractName: string, clarityCode: string) {
+  try {
+    const result = await request('stx_deployContract', {
+      name: contractName,
+      clarityCode: clarityCode,
+      network: NETWORK,
+    });
+    return { success: true, txId: result.txid };
+  } catch (error) {
+    console.error('Deploy contract failed:', error);
+    return { success: false, error };
+  }
+}

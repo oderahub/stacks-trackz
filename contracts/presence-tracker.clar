@@ -277,3 +277,87 @@
     )
   )
 )
+
+;; ============================================
+;; READ-ONLY FUNCTIONS
+;; ============================================
+
+;; Get user stats
+(define-read-only (get-user-stats (user principal))
+  (map-get? user-stats user)
+)
+
+;; Get user's current streak
+(define-read-only (get-streak (user principal))
+  (match (map-get? user-stats user)
+    stats (ok (get current-streak stats))
+    (ok u0)
+  )
+)
+
+;; Get user's longest streak
+(define-read-only (get-longest-streak (user principal))
+  (match (map-get? user-stats user)
+    stats (ok (get longest-streak stats))
+    (ok u0)
+  )
+)
+
+;; Check if user has claimed a specific badge
+(define-read-only (has-badge (user principal) (badge-type uint))
+  (is-some (map-get? user-badges { user: user, badge-type: badge-type }))
+)
+
+;; Check if user is eligible for a badge
+(define-read-only (is-eligible-for-badge (user principal) (badge-type uint))
+  (match (map-get? user-stats user)
+    stats (ok (check-badge-eligibility badge-type stats))
+    (ok false)
+  )
+)
+
+;; Get all badge statuses for a user
+(define-read-only (get-badge-status (user principal))
+  (ok {
+    week-warrior: (has-badge user BADGE_WEEK_WARRIOR),
+    monthly-master: (has-badge user BADGE_MONTHLY_MASTER),
+    century-club: (has-badge user BADGE_CENTURY_CLUB),
+    chatterbox: (has-badge user BADGE_CHATTERBOX),
+    love-machine: (has-badge user BADGE_LOVE_MACHINE),
+    og-presence: (has-badge user BADGE_OG_PRESENCE)
+  })
+)
+
+;; Get global stats
+(define-read-only (get-global-stats)
+  (ok {
+    total-users: (var-get total-users),
+    total-check-ins: (var-get total-check-ins)
+  })
+)
+
+;; Check if user can check in (not already checked in today)
+(define-read-only (can-check-in (user principal))
+  (match (map-get? user-stats user)
+    stats
+      (let
+        (
+          (blocks-since-last (- block-height (get last-check-in stats)))
+        )
+        (ok (>= blocks-since-last BLOCKS_PER_DAY))
+      )
+    (ok true)  ;; New user can always check in
+  )
+)
+
+;; Get badge requirements (for frontend display)
+(define-read-only (get-badge-requirements)
+  (ok {
+    week-warrior: { type: "streak", requirement: STREAK_WEEK },
+    monthly-master: { type: "streak", requirement: STREAK_MONTH },
+    century-club: { type: "streak", requirement: STREAK_CENTURY },
+    chatterbox: { type: "comments", requirement: COMMENTS_THRESHOLD },
+    love-machine: { type: "likes", requirement: LIKES_THRESHOLD },
+    og-presence: { type: "check-ins", requirement: CHECKINS_THRESHOLD }
+  })
+)

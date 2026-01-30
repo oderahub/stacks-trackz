@@ -5,6 +5,7 @@
 (define-constant CONTRACT_OWNER tx-sender)
 
 ;; Error codes
+(define-constant ERR_NOT_AUTHORIZED (err u100))
 (define-constant ERR_ALREADY_CHECKED_IN (err u200))
 (define-constant ERR_NOT_ELIGIBLE (err u201))
 (define-constant ERR_BADGE_ALREADY_CLAIMED (err u202))
@@ -56,22 +57,6 @@
 (define-data-var total-users uint u0)
 (define-data-var total-check-ins uint u0)
 
-;; Badge contract reference (set after deployment)
-(define-data-var badge-contract principal CONTRACT_OWNER)
-
-;; ============================================
-;; ADMIN FUNCTIONS
-;; ============================================
-
-;; Set the badge contract address (call after deploying both contracts)
-(define-public (set-badge-contract (contract-address principal))
-  (begin
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) (err u100))
-    (var-set badge-contract contract-address)
-    (ok true)
-  )
-)
-
 ;; ============================================
 ;; CORE FUNCTIONS
 ;; ============================================
@@ -81,7 +66,7 @@
   (let
     (
       (caller tx-sender)
-      (current-block block-height)
+      (current-block stacks-block-height)
       (existing-stats (map-get? user-stats caller))
     )
     (match existing-stats
@@ -242,7 +227,7 @@
       event: "badge-claimed",
       user: caller,
       badge-type: badge-type,
-      block-height: block-height
+      block-height: stacks-block-height
     })
     (ok badge-type)
   )
@@ -342,7 +327,7 @@
     stats
       (let
         (
-          (blocks-since-last (- block-height (get last-check-in stats)))
+          (blocks-since-last (- stacks-block-height (get last-check-in stats)))
         )
         (ok (>= blocks-since-last BLOCKS_PER_DAY))
       )

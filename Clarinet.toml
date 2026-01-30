@@ -4,7 +4,6 @@ description = "Daily habit tracker with NFT badges on Stacks"
 authors = []
 telemetry = false
 cache_dir = "./.cache"
-requirements = []
 
 [contracts.presence-badges]
 path = "contracts/presence-badges.clar"

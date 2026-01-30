@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+.cache/
+deployments/
+
+# Environment and secrets
+.env
+*.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

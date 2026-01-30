@@ -22,7 +22,8 @@
 (define-constant BADGE_OG_PRESENCE u6)       ;; 100 check-ins
 
 ;; Base URI for metadata (can be updated by owner)
-(define-data-var base-uri (string-ascii 256) "https://presence-protocol.app/metadata/")
+;; Using 210 max length to allow room for badge-type suffix (int-to-ascii returns up to 40 chars)
+(define-data-var base-uri (string-ascii 210) "https://presence-protocol.app/metadata/")
 
 ;; ============================================
 ;; NFT DEFINITION
@@ -70,8 +71,11 @@
 
 ;; Get token URI - returns metadata URL for the badge
 (define-read-only (get-token-uri (token-id uint))
-  (let ((badge-type (default-to u0 (map-get? token-badge-type token-id))))
-    (ok (some (concat (var-get base-uri) (uint-to-ascii badge-type))))
+  (let
+    (
+      (badge-type (default-to u0 (map-get? token-badge-type token-id)))
+    )
+    (ok (some (concat (var-get base-uri) (int-to-ascii (to-int badge-type)))))
   )
 )
 
@@ -83,7 +87,7 @@
 ;; Transfer token
 (define-public (transfer (token-id uint) (sender principal) (recipient principal))
   (begin
-    (asserts! (is-eq contract-caller sender) ERR_NOT_TOKEN_OWNER)
+    (asserts! (is-eq tx-sender sender) ERR_NOT_TOKEN_OWNER)
     (asserts! (is-some (nft-get-owner? presence-badge token-id)) ERR_TOKEN_NOT_FOUND)
     (nft-transfer? presence-badge token-id sender recipient)
   )
@@ -113,7 +117,7 @@
     (try! (nft-mint? presence-badge token-id recipient))
     ;; Store badge metadata
     (map-set token-badge-type token-id badge-type)
-    (map-set token-mint-time token-id block-height)
+    (map-set token-mint-time token-id stacks-block-height)
     ;; Update last token ID
     (var-set last-token-id token-id)
     ;; Emit event
@@ -122,7 +126,7 @@
       token-id: token-id,
       badge-type: badge-type,
       recipient: recipient,
-      block-height: block-height
+      block-height: stacks-block-height
     })
     (ok token-id)
   )
@@ -175,7 +179,7 @@
 ;; ============================================
 
 ;; Update base URI (only owner)
-(define-public (set-base-uri (new-uri (string-ascii 256)))
+(define-public (set-base-uri (new-uri (string-ascii 210)))
   (begin
     (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_NOT_AUTHORIZED)
     (var-set base-uri new-uri)
@@ -191,14 +195,3 @@
   )
 )
 
-;; ============================================
-;; HELPER FUNCTIONS
-;; ============================================
-
-;; Convert uint to ASCII string (for URI construction)
-(define-read-only (uint-to-ascii (value uint))
-  (if (<= value u9)
-    (unwrap-panic (element-at "0123456789" value))
-    "0"
-  )
-)

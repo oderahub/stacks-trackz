@@ -1,5 +1,5 @@
 [network]
-name = "devnet"
+name = "simnet"
 
 [accounts.deployer]
 mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art"

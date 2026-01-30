@@ -1,119 +1,68 @@
-# 🔥 Proof of Presence
+# Proof of Presence
 
-A daily habit tracker dApp built on Stacks blockchain. Users check in daily, log their activity (likes, comments), build streaks, and earn NFT badges for their consistency.
+A daily habit tracker dApp on Stacks blockchain. Check in daily, build streaks, and earn NFT badges.
+
+## Live on Mainnet
+
+| Contract | Address |
+|----------|---------|
+| presence-tracker | `SP2FY55DK4NESNH6E5CJSNZP2CQ5PZ5BX64B29FYG.presence-tracker` |
+| presence-badges | `SP2FY55DK4NESNH6E5CJSNZP2CQ5PZ5BX64B29FYG.presence-badges` |
 
 ## Features
 
-- **Daily Check-ins**: Check in once per day to maintain your streak
-- **Activity Logging**: Track likes and comments
-- **Streak Tracking**: Build consecutive day streaks (current & longest)
-- **NFT Badges**: Earn SIP-009 compliant NFT badges for achievements:
-  - 🔥 Week Warrior (7-day streak)
-  - 🌟 Monthly Master (30-day streak)
-  - 💯 Century Club (100-day streak)
-  - 💬 Chatterbox (100 comments)
-  - ❤️ Love Machine (500 likes)
-  - 🏆 OG Presence (100 check-ins)
-- **Leaderboard**: Track global stats (users can build frontends to index events)
+- **Daily Check-ins** - Maintain your streak with one check-in per day
+- **Activity Tracking** - Log likes and comments
+- **Streak System** - Track current and longest streaks
+- **NFT Badges** - SIP-009 compliant badges for achievements
+
+### Badges
+
+| Badge | Requirement |
+|-------|-------------|
+| Week Warrior | 7-day streak |
+| Monthly Master | 30-day streak |
+| Century Club | 100-day streak |
+| Chatterbox | 100 comments |
+| Love Machine | 500 likes |
+| OG Presence | 100 check-ins |
 
 ## Project Structure
 
 ```
 presence-protocol/
 ├── contracts/
-│   ├── presence-badges.clar    # SIP-009 NFT contract for badges
+│   ├── presence-badges.clar    # SIP-009 NFT contract
 │   └── presence-tracker.clar   # Core tracking logic
-├── tests/
-│   └── presence.test.ts        # Unit tests
 ├── frontend/
-│   ├── src/
-│   │   ├── lib/stacks.ts       # Stacks wallet & contract utilities
-│   │   ├── App.tsx             # Main React component
-│   │   ├── App.css             # Styles
-│   │   └── main.tsx            # Entry point
-│   ├── index.html
-│   └── package.json
+│   └── src/lib/stacks.ts       # Wallet & contract utilities
 ├── settings/
-│   ├── Devnet.toml             # Local development
-│   ├── Testnet.toml            # Testnet deployment
-│   └── Mainnet.toml            # Mainnet deployment
-├── Clarinet.toml               # Clarinet configuration
-└── package.json                # Root package.json for tests
+│   ├── Devnet.toml
+│   ├── Simnet.toml
+│   └── Mainnet.toml
+├── scripts/
+│   └── set-minter.js           # Helper to authorize minter
+└── Clarinet.toml               # Clarity 3, Epoch 3.0
 ```
-
-## Prerequisites
-
-- [Clarinet](https://github.com/stx-labs/clarinet) - Clarity development environment
-- [Node.js](https://nodejs.org/) (v18+)
-- A Stacks wallet (e.g., [Leather](https://leather.io/) or [Xverse](https://www.xverse.app/))
 
 ## Quick Start
 
-### 1. Install Clarinet
+### Prerequisites
+
+- [Clarinet](https://github.com/hirosystems/clarinet)
+- [Node.js](https://nodejs.org/) v18+
+- [Leather Wallet](https://leather.io/)
+
+### Setup
 
 ```bash
-# macOS
-brew install clarinet
-
-# Windows
-winget install clarinet
-
-# Or from source
-cargo install clarinet
-```
-
-### 2. Clone and Setup
-
-```bash
+git clone <repo>
 cd presence-protocol
 npm install
-```
-
-### 3. Test the Contracts
-
-```bash
-# Check contract syntax
 clarinet check
-
-# Run unit tests
-npm run test
-
-# Interactive REPL
-clarinet console
 ```
 
-### 4. Deploy to Testnet
-
-#### Get Testnet Tokens
-1. Go to [Hiro Platform](https://platform.hiro.so/) and create an account
-2. Navigate to the Faucet tab
-3. Request testnet STX to your wallet address
-
-#### Configure Deployment
-Edit `settings/Testnet.toml`:
-```toml
-[accounts.deployer]
-mnemonic = "your twelve word seed phrase goes here"
-derivation = "m/44'/5757'/0'/0/0"
-```
-
-#### Deploy
-```bash
-# Generate deployment plan
-clarinet deployments generate --testnet --medium-cost
-
-# Deploy contracts
-clarinet deployments apply --testnet
-```
-
-#### After Deployment
-1. Note your deployed contract addresses
-2. Call `set-authorized-minter` on `presence-badges` to allow `presence-tracker` to mint:
-   ```clarity
-   (contract-call? .presence-badges set-authorized-minter 'YOUR_ADDRESS.presence-tracker)
-   ```
-
-### 5. Run the Frontend
+### Run Frontend
 
 ```bash
 cd frontend
@@ -121,138 +70,99 @@ npm install
 npm run dev
 ```
 
-Update `src/lib/stacks.ts` with your deployed contract address:
-```typescript
-export const CONTRACT_ADDRESS = 'YOUR_DEPLOYED_ADDRESS';
-export const NETWORK = 'testnet'; // or 'mainnet'
+## Contract API
+
+### presence-tracker
+
+```clarity
+;; Check in daily
+(contract-call? .presence-tracker check-in)
+
+;; Log activity
+(contract-call? .presence-tracker log-likes u10)
+(contract-call? .presence-tracker log-comments u5)
+
+;; Claim badge (1-6)
+(contract-call? .presence-tracker claim-badge u1)
+
+;; Read functions
+(contract-call? .presence-tracker get-user-stats 'SP...)
+(contract-call? .presence-tracker can-check-in 'SP...)
+(contract-call? .presence-tracker get-streak 'SP...)
+(contract-call? .presence-tracker get-badge-status 'SP...)
 ```
 
-## Contract Functions
+### presence-badges (SIP-009)
 
-### presence-tracker.clar
-
-#### Public Functions
-| Function | Description |
-|----------|-------------|
-| `(check-in)` | Daily check-in, updates streak |
-| `(log-likes (count uint))` | Log like activity |
-| `(log-comments (count uint))` | Log comment activity |
-| `(claim-badge (badge-type uint))` | Claim NFT badge if eligible |
-
-#### Read-Only Functions
-| Function | Description |
-|----------|-------------|
-| `(get-user-stats (user principal))` | Get all stats for a user |
-| `(get-streak (user principal))` | Get current streak |
-| `(can-check-in (user principal))` | Check if user can check in |
-| `(has-badge (user principal) (badge-type uint))` | Check if user owns badge |
-| `(is-eligible-for-badge (user principal) (badge-type uint))` | Check eligibility |
-| `(get-global-stats)` | Get total users and check-ins |
-
-### presence-badges.clar (SIP-009)
-
-#### Public Functions
-| Function | Description |
-|----------|-------------|
-| `(transfer (id uint) (sender principal) (recipient principal))` | Transfer NFT |
-| `(mint (recipient principal) (badge-type uint))` | Mint badge (authorized only) |
-
-#### Read-Only Functions
-| Function | Description |
-|----------|-------------|
-| `(get-last-token-id)` | Last minted token ID |
-| `(get-token-uri (id uint))` | Metadata URI for token |
-| `(get-owner (id uint))` | Owner of token |
-| `(get-badge-type (id uint))` | Badge type of token |
-
-## Badge Types
-
-| ID | Name | Requirement |
-|----|------|-------------|
-| 1 | Week Warrior | 7-day streak |
-| 2 | Monthly Master | 30-day streak |
-| 3 | Century Club | 100-day streak |
-| 4 | Chatterbox | 100 total comments |
-| 5 | Love Machine | 500 total likes |
-| 6 | OG Presence | 100 total check-ins |
+```clarity
+(contract-call? .presence-badges get-owner u1)
+(contract-call? .presence-badges get-token-uri u1)
+(contract-call? .presence-badges transfer u1 sender recipient)
+```
 
 ## Frontend Integration
 
-The frontend uses `@stacks/connect` for wallet connection and `@stacks/transactions` for contract calls.
-
-### Connect Wallet
 ```typescript
-import { connect } from '@stacks/connect';
+import { connect, request } from '@stacks/connect';
 
+// Connect wallet
 const response = await connect();
-const stxAddress = response.addresses.find(a => a.symbol === 'STX')?.address;
-```
-
-### Call Contract
-```typescript
-import { request } from '@stacks/connect';
-import { Cl } from '@stacks/transactions';
+const address = response.addresses.find(a => a.symbol === 'STX')?.address;
 
 // Check in
-const result = await request('stx_callContract', {
-  contract: 'ADDRESS.presence-tracker',
+await request('stx_callContract', {
+  contract: 'SP2FY55DK4NESNH6E5CJSNZP2CQ5PZ5BX64B29FYG.presence-tracker',
   functionName: 'check-in',
   functionArgs: [],
-  network: 'testnet',
+});
+
+// Claim badge
+await request('stx_callContract', {
+  contract: 'SP2FY55DK4NESNH6E5CJSNZP2CQ5PZ5BX64B29FYG.presence-tracker',
+  functionName: 'claim-badge',
+  functionArgs: ['u1'], // Week Warrior
 });
 ```
 
-### Read Contract
-```typescript
-import { fetchCallReadOnlyFunction, Cl, cvToValue } from '@stacks/transactions';
+## Deploy Your Own
 
-const result = await fetchCallReadOnlyFunction({
-  contractAddress: 'ADDRESS',
-  contractName: 'presence-tracker',
-  functionName: 'get-user-stats',
-  functionArgs: [Cl.principal(userAddress)],
-  network: 'testnet',
-  senderAddress: userAddress,
-});
+### 1. Configure
 
-const stats = cvToValue(result);
+Edit `settings/Mainnet.toml`:
+```toml
+[accounts.deployer]
+mnemonic = "your 24 word phrase"
 ```
 
-## Deploy to Mainnet
+### 2. Deploy
 
-1. Get mainnet STX for deployment fees
-2. Update `settings/Mainnet.toml` with your mainnet mnemonic
-3. Deploy:
-   ```bash
-   clarinet deployments generate --mainnet --medium-cost
-   clarinet deployments apply --mainnet
-   ```
-4. Update frontend to use `'mainnet'` network
-
-## Building a Leaderboard
-
-The contract emits events on every action. Use [Chainhooks](https://docs.hiro.so/en/tools/chainhooks) to index events and build a leaderboard:
-
-```json
-{
-  "if_this": {
-    "scope": "contract_call",
-    "contract_identifier": "YOUR_ADDRESS.presence-tracker",
-    "method": "check-in"
-  },
-  "then_that": {
-    "http_post": {
-      "url": "https://your-api.com/webhook"
-    }
-  }
-}
+```bash
+clarinet deployments generate --mainnet --low-cost
+clarinet deployments apply --mainnet
 ```
+
+### 3. Authorize Minter
+
+```bash
+MNEMONIC="your phrase" node scripts/set-minter.js
+```
+
+Or manually:
+```clarity
+(contract-call? .presence-badges set-authorized-minter 'YOUR_ADDRESS.presence-tracker)
+```
+
+## Tech Stack
+
+- **Blockchain**: Stacks (Clarity 3, Epoch 3.0)
+- **NFT Standard**: SIP-009
+- **Frontend**: React + Vite + TypeScript
+- **Wallet**: @stacks/connect
 
 ## Resources
 
-- [Stacks Documentation](https://docs.stacks.co)
+- [Stacks Docs](https://docs.stacks.co)
 - [Clarity Book](https://book.clarity-lang.org)
-- [Stacks.js Reference](https://stacks.js.org)
 - [Hiro Platform](https://platform.hiro.so)
 
 ## License
